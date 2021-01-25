@@ -27,7 +27,7 @@ pragma solidity 0.8.0;
 
 contract ethbox
 {
-	// Transaction data
+    // Transaction data
     struct box {
         address         payable sender;
         address         recipient;
@@ -43,20 +43,20 @@ contract ethbox
     address owner;
     box[] boxes;
 
-	// Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
+    // Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
     mapping(address => uint[]) sender_map;
     mapping(address => uint[]) recipient_map;
     
-	// Deposit funds into contract
+    // Deposit funds into contract
     function create_box(address _recipient, ERC20Interface _send_token, uint _send_value, ERC20Interface _request_token, uint _request_value, bytes32 _pass_hash_hash, uint32 _timestamp) external payable
     {
-		// Max 20 outgoing boxes per address, for now
+        // Max 20 outgoing boxes per address, for now
         require(sender_map[msg.sender].length < 20);
         
-		// Sending ETH
+        // Sending ETH
         if(_send_token == ERC20Interface(address(0)))
             require(msg.value == _send_value);
-		// Sending Tokens
+        // Sending Tokens
         else {
             require(_send_token.balanceOf(msg.sender) >= _send_value);
             _send_token.transferFrom(msg.sender, address(this), _send_value);
@@ -74,7 +74,7 @@ contract ethbox
         new_box.taken           = false;
         boxes.push(new_box);
         
-		// Save box index to mappings for sender & recipient
+        // Save box index to mappings for sender & recipient
         sender_map[msg.sender].push(boxes.length - 1);
         recipient_map[_recipient].push(boxes.length - 1);
     }
@@ -85,12 +85,12 @@ contract ethbox
     {
         require((_box_index < boxes.length) && ((msg.sender == boxes[_box_index].sender) || (msg.sender == boxes[_box_index].recipient)) && (!boxes[_box_index].taken));
     
-		// If user is recipient, require passphrase and requested ETH / tokens; but not if user is also sender = aborting own transaction
+        // If user is recipient, require passphrase and requested ETH / tokens; but not if user is also sender = aborting own transaction
         if((msg.sender == boxes[_box_index].recipient) && (msg.sender != boxes[_box_index].sender)) {
-			// Compare stored hash hash to newly computed hash of hash passed by user through web browser interface
+            // Compare stored hash hash to newly computed hash of hash passed by user through web browser interface
             require(boxes[_box_index].pass_hash_hash == keccak256(abi.encodePacked(_pass_hash)));
             
-			// Check for balance of requested ETH / tokens, grab tokens if enough
+            // Check for balance of requested ETH / tokens, grab tokens if enough
             if(boxes[_box_index].request_value != 0) {
                 if(boxes[_box_index].request_token == ERC20Interface(address(0)))
                     require(msg.value == boxes[_box_index].request_value);
@@ -101,13 +101,13 @@ contract ethbox
             }
         }
         
-		// Transfer sent ETH / tokens to recipient
+        // Transfer sent ETH / tokens to recipient
         if(boxes[_box_index].send_token == ERC20Interface(address(0)))
             payable(msg.sender).transfer(boxes[_box_index].send_value);
         else
             boxes[_box_index].send_token.transfer(msg.sender, boxes[_box_index].send_value);
         
-		// Only if user is not sender, aborting his own transaction: transfer requested ETH / tokens to sender
+        // Only if user is not sender, aborting his own transaction: transfer requested ETH / tokens to sender
         if((msg.sender == boxes[_box_index].recipient) && (msg.sender != boxes[_box_index].sender)) {
             if(boxes[_box_index].request_token == ERC20Interface(address(0)))
                 payable(boxes[_box_index].sender).transfer(boxes[_box_index].request_value);

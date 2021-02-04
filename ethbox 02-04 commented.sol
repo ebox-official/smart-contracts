@@ -7,7 +7,8 @@ pragma solidity 0.8.1;
 // ethbox
 //
 // ethbox is a smart contract based escrow service. Instead of sending funds from A to B,
-// users send funds through ethbox.
+// users send funds through ethbox. This enables users to abort outgoing transactions
+// in case of a wrong recipient address.
 //
 // Funds are put in "boxes". Each box contains all the relevant data for that transaction.
 // Boxes can be secured with a passphrase. Users can request ETH or tokens in return

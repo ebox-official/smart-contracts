@@ -24,9 +24,10 @@ pragma solidity 0.8.1;
 //
 //------------------------------------------------------------------------------------------------------------------
 
+
 contract ethbox
 {
-	// Transaction data
+    // Transaction data
     struct Box {
         address         payable sender;
         address         recipient;
@@ -42,7 +43,7 @@ contract ethbox
     address owner;
     Box[] boxes;
 
-	// Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
+    // Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
     mapping(address => uint[]) senderMap;
     mapping(address => uint[]) recipientMap;
     
@@ -50,7 +51,7 @@ contract ethbox
     // Deposit funds into contract
     function createBox(address _recipient, ERC20Interface _sendToken, uint _sendValue, ERC20Interface _requestToken, uint _requestValue, bytes32 _passHashHash, uint32 _timestamp) external payable
     {
-		// Max 20 outgoing boxes per address, for now
+        // Max 20 outgoing boxes per address, for now
         require(senderMap[msg.sender].length < 20, "ethbox currently supports a maximum of 20 outgoing transactions per address.");
     
         Box memory newBox;
@@ -65,12 +66,12 @@ contract ethbox
         newBox.taken        = false;
         boxes.push(newBox);
         
-		// Save box index to mappings for sender & recipient
+        // Save box index to mappings for sender & recipient
         senderMap[msg.sender].push(boxes.length - 1);
         recipientMap[_recipient].push(boxes.length - 1);
         
         if(_sendToken == ERC20Interface(address(0)))
-			// Sending ETH
+            // Sending ETH
             require(msg.value == _sendValue, "Insufficient ETH!");
         else {
             // Sending tokens
@@ -85,7 +86,7 @@ contract ethbox
         require((_boxIndex < boxes.length) && (!boxes[_boxIndex].taken), "Invalid box index!");
         require(msg.sender != boxes[_boxIndex].sender, "Please use 'cancelBox' to cancel transactions as sender!");
 
-		// Recipient needs to have correct passphrase (hashed) and requested ETH / tokens
+        // Recipient needs to have correct passphrase (hashed) and requested ETH / tokens
         require(
             (msg.sender == boxes[_boxIndex].recipient)
             && (boxes[_boxIndex].passHashHash == keccak256(abi.encodePacked(_passHash)))
@@ -95,7 +96,7 @@ contract ethbox
         
         setBoxTaken(_boxIndex);
         
-		// Transfer requested ETH / tokens to sender
+        // Transfer requested ETH / tokens to sender
         if(boxes[_boxIndex].requestValue != 0) {
             if(boxes[_boxIndex].requestToken == ERC20Interface(address(0))) {
                 require(msg.value == boxes[_boxIndex].requestValue, "Incorrect amount of ETH attached to transaction, has to be exactly as much as requested!");
@@ -106,7 +107,7 @@ contract ethbox
             }
         }
 
-		// Transfer sent ETH / tokens to recipient
+        // Transfer sent ETH / tokens to recipient
         if(boxes[_boxIndex].sendToken == ERC20Interface(address(0)))
             payable(msg.sender).transfer(boxes[_boxIndex].sendValue);
         else
@@ -121,19 +122,19 @@ contract ethbox
         
         setBoxTaken(_boxIndex);
         
-		// Transfer ETH / tokens back to sender
+        // Transfer ETH / tokens back to sender
         if(boxes[_boxIndex].sendToken == ERC20Interface(address(0)))
             payable(msg.sender).transfer(boxes[_boxIndex].sendValue);
         else
             require(boxes[_boxIndex].sendToken.transfer(msg.sender, boxes[_boxIndex].sendValue), "Transferring tokens back to sender failed!");
     }
     
-	// Mark box as taken and remove from mappings
+    // Mark box as taken and remove from mappings
     function setBoxTaken(uint _boxIndex) internal
     {
         require((_boxIndex < boxes.length) && (!boxes[_boxIndex].taken), "Invalid box index!");
         
-		// Remove box from sender address => box index mapping
+        // Remove box from sender address => box index mapping
         for(uint8 i = 0; i < senderMap[boxes[_boxIndex].sender].length; i++) {
             if(senderMap[boxes[_boxIndex].sender][i] == _boxIndex) {
                 if(i != (senderMap[boxes[_boxIndex].sender].length - 1))
@@ -144,7 +145,7 @@ contract ethbox
             }
         }
         
-		// Remove box from recipient address => box index mapping
+        // Remove box from recipient address => box index mapping
         for(uint8 i = 0; i < recipientMap[boxes[_boxIndex].recipient].length; i++) {
             if(recipientMap[boxes[_boxIndex].recipient][i] == _boxIndex) {
                 if(i != (recipientMap[boxes[_boxIndex].recipient].length - 1))
@@ -155,11 +156,11 @@ contract ethbox
             }
         }
         
-		// Mark box as taken, so it can't be taken another time
+        // Mark box as taken, so it can't be taken another time
         boxes[_boxIndex].taken = true;
     }
     
-	// Retrieve single box by index - only for sender / recipient & contract owner
+    // Retrieve single box by index - only for sender / recipient & contract owner
     function getBox(uint _boxIndex) external view returns(Box memory)
     {
         require(
@@ -173,33 +174,33 @@ contract ethbox
         return boxes[_boxIndex];
     }
     
-	// Retrieve sender address => box index mapping for user
+    // Retrieve sender address => box index mapping for user
     function getBoxesOutgoing() external view returns(uint[] memory)
     {
         return senderMap[msg.sender];
     }
     
-	// Retrieve recipient address => box index mapping for user
+    // Retrieve recipient address => box index mapping for user
     function getBoxesIncoming() external view returns(uint[] memory)
     {
         return recipientMap[msg.sender];
     }
     
-	// Retrieve complete boxes array, only for contract owner
+    // Retrieve complete boxes array, only for contract owner
     function getBoxesAll() external view returns(Box[] memory)
     {
         require(msg.sender == owner, "Non-specific transaction data is not accessible by the general public.");
         return boxes;
     }
     
-	// Retrieve number of boxes, only for contract owner
+    // Retrieve number of boxes, only for contract owner
     function getNumBoxes() external view returns(uint)
     {
         require(msg.sender == owner, "Non-specific transaction data is not accessible by the general public.");
         return boxes.length;
     }
     
-	// Don't accept incoming ETH
+    // Don't accept incoming ETH
     fallback() external payable
     {
         revert("Please don't send funds directly to the ethbox smart contract.");
@@ -214,7 +215,7 @@ contract ethbox
 
 interface ERC20Interface
 {
-	// Standard ERC 20 token interface
+    // Standard ERC 20 token interface
 
     function totalSupply() external view returns (uint);
     function balanceOf(address tokenOwner) external view returns (uint balance);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.1;
+pragma solidity 0.8.2;
 
 
 //------------------------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ contract ethboxToken is ERC20Interface, SafeMath
     
     function totalSupply() override external view returns(uint)
     {
-        return _totalSupply - balances[address(0)];
+        return safeSub(_totalSupply, balances[address(0)]);
     }
 
     function balanceOf(address tokenOwner) override external view returns(uint)

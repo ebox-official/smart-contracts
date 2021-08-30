@@ -44,7 +44,7 @@ contract ethbox
         bool            taken;
     }
 
-	struct BoxWithPrivacy {
+    struct BoxWithPrivacy {
         bytes32         senderHash;
         bytes32         recipientHash;
         bytes32         passHashHash;
@@ -54,16 +54,16 @@ contract ethbox
         bool            taken;
     }
     
-	address owner;
-	bool public stopDeposits = false; 
+    address owner;
+    bool public stopDeposits = false; 
 
-	Box[] boxes;
-	BoxWithPrivacy[] boxesWithPrivacy;   
+    Box[] boxes;
+    BoxWithPrivacy[] boxesWithPrivacy;   
 
     // Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
     mapping(address => uint[]) senderMap;
     mapping(address => uint[]) recipientMap;
-	mapping(bytes32 => uint[]) senderMapWithPrivacy;
+    mapping(bytes32 => uint[]) senderMapWithPrivacy;
     mapping(bytes32 => uint[]) recipientMapWithPrivacy;
 
 
@@ -102,7 +102,7 @@ contract ethbox
         }
     }
 
-	function createBoxWithPrivacy(bytes32 _recipientHash, ERC20Interface _sendToken, uint _sendValue, bytes32 _passHashHash) external payable
+    function createBoxWithPrivacy(bytes32 _recipientHash, ERC20Interface _sendToken, uint _sendValue, bytes32 _passHashHash) external payable
     {
         // Make sure deposits haven't been disabled (will be done when switching to new contract version)
         require(!stopDeposits, "Depositing to this ethbox contract has been disabled. You can still withdraw funds.");
@@ -148,7 +148,7 @@ contract ethbox
             "Deposited funds can only be retrieved by recipient with correct passphrase."
         );
         
-		// Mark box as taken, so it can't be taken another time
+        // Mark box as taken, so it can't be taken another time
         boxes[_boxIndex].taken = true;
         
         // Transfer requested ETH / tokens to sender
@@ -169,7 +169,7 @@ contract ethbox
             require(boxes[_boxIndex].sendToken.transfer(msg.sender, boxes[_boxIndex].sendValue), "Transferring tokens to recipient failed!");
     }
 
-	function clearBoxWithPrivacy(uint _boxIndex, bytes32 _passHash) external payable
+    function clearBoxWithPrivacy(uint _boxIndex, bytes32 _passHash) external payable
     {
         require((_boxIndex < boxesWithPrivacy.length) && (!boxesWithPrivacy[_boxIndex].taken), "Invalid box index!");
         require(keccak256(abi.encodePacked(msg.sender)) != boxesWithPrivacy[_boxIndex].senderHash, "Please use 'cancelBox' to cancel transactions as sender!");
@@ -208,7 +208,7 @@ contract ethbox
             require(boxes[_boxIndex].sendToken.transfer(msg.sender, boxes[_boxIndex].sendValue), "Transferring tokens back to sender failed!");
     }
 
-	function cancelBoxWithPrivacy(uint _boxIndex) external payable
+    function cancelBoxWithPrivacy(uint _boxIndex) external payable
     {
         require((_boxIndex < boxesWithPrivacy.length) && (!boxesWithPrivacy[_boxIndex].taken), "Invalid box index!");
         require(keccak256(abi.encodePacked(msg.sender)) == boxesWithPrivacy[_boxIndex].senderHash, "Transactions can only be cancelled by sender.");
@@ -237,7 +237,7 @@ contract ethbox
         return boxes[_boxIndex];
     }
 
-	function getBoxWithPrivacy(uint _boxIndex) external view returns(BoxWithPrivacy memory)
+    function getBoxWithPrivacy(uint _boxIndex) external view returns(BoxWithPrivacy memory)
     {
         require(
             (msg.sender == owner)
@@ -256,7 +256,7 @@ contract ethbox
         return senderMap[msg.sender];
     }
 
-	function getBoxesOutgoingWithPrivacy() external view returns(uint[] memory)
+    function getBoxesOutgoingWithPrivacy() external view returns(uint[] memory)
     {
         return senderMapWithPrivacy[keccak256(abi.encodePacked(msg.sender))];
     }
@@ -267,7 +267,7 @@ contract ethbox
         return recipientMap[msg.sender];
     }
 
-	function getBoxesIncomingWithPrivacy() external view returns(uint[] memory)
+    function getBoxesIncomingWithPrivacy() external view returns(uint[] memory)
     {
         return recipientMapWithPrivacy[keccak256(abi.encodePacked(msg.sender))];
     }
@@ -279,7 +279,7 @@ contract ethbox
         return boxes;
     }
 
-	function getBoxesAllWithPrivacy() external view returns(BoxWithPrivacy[] memory)
+    function getBoxesAllWithPrivacy() external view returns(BoxWithPrivacy[] memory)
     {
         require(msg.sender == owner, "Non-specific transaction data is not accessible by the general public.");
         return boxesWithPrivacy;
@@ -292,35 +292,35 @@ contract ethbox
         return boxes.length;
     }
 
-	function getNumBoxesWithPrivacy() external view returns(uint)
+    function getNumBoxesWithPrivacy() external view returns(uint)
     {
         require(msg.sender == owner, "Non-specific transaction data is not accessible by the general public.");
         return boxesWithPrivacy.length;
     }
 
-	function cancelAllNonPrivacyBoxes() external
+    function cancelAllNonPrivacyBoxes() external
     {
-		require(msg.sender == owner, "This function is reserved for administration.");
+        require(msg.sender == owner, "This function is reserved for administration.");
 
-		for(uint i = 0; i < boxes.length; i++)
-			if(!boxes[i].taken) {
-				// Mark box as taken, so it can't be taken another time
-				boxes[i].taken = true;
+        for(uint i = 0; i < boxes.length; i++)
+            if(!boxes[i].taken) {
+                // Mark box as taken, so it can't be taken another time
+                boxes[i].taken = true;
 
-				// Transfer ETH / tokens back to sender
-				if(boxes[i].sendToken == ERC20Interface(address(0)))
-					boxes[i].sender.transfer(boxes[i].sendValue);
-				else
-					require(boxes[i].sendToken.transfer(boxes[i].sender, boxes[i].sendValue), "Transferring tokens back to sender failed!");
-			}
+                // Transfer ETH / tokens back to sender
+                if(boxes[i].sendToken == ERC20Interface(address(0)))
+                    boxes[i].sender.transfer(boxes[i].sendValue);
+                else
+                    require(boxes[i].sendToken.transfer(boxes[i].sender, boxes[i].sendValue), "Transferring tokens back to sender failed!");
+            }
     }
 
-	function setStopDeposits(bool _state) external
-	{
-		require(msg.sender == owner, "This function is reserved for administration.");
+    function setStopDeposits(bool _state) external
+    {
+        require(msg.sender == owner, "This function is reserved for administration.");
 
-		stopDeposits = _state;
-	}
+        stopDeposits = _state;
+    }
     
     // Don't accept incoming ETH
     fallback() external payable

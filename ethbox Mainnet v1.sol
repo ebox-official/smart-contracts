@@ -60,56 +60,56 @@ contract ethbox
 	Box[] boxes;
 	BoxWithPrivacy[] boxesWithPrivacy;   
 
-  // Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
-  mapping(address => uint[]) senderMap;
-  mapping(address => uint[]) recipientMap;
-  mapping(bytes32 => uint[]) senderMapWithPrivacy;
-  mapping(bytes32 => uint[]) recipientMapWithPrivacy;
+    // Map box indexes to addresses for easier handling / privacy, so users are shown only their own boxes by the contract
+    mapping(address => uint[]) senderMap;
+    mapping(address => uint[]) recipientMap;
+	mapping(bytes32 => uint[]) senderMapWithPrivacy;
+    mapping(bytes32 => uint[]) recipientMapWithPrivacy;
 
 
-  // Deposit funds into contract
-  function createBox(address _recipient, ERC20Interface _sendToken, uint _sendValue, ERC20Interface _requestToken, uint _requestValue, bytes32 _passHashHash) external payable
-  {
-      // Make sure deposits haven't been disabled (will be done when switching to new contract version)
-      require(!stopDeposits, "Depositing to this ethbox contract has been disabled. You can still withdraw funds.");
-
-      // Max 20 outgoing boxes per address, for now
-      require(senderMap[msg.sender].length < 20, "ethbox currently supports a maximum of 20 outgoing transactions per address.");
-
-      Box memory newBox;
-      newBox.sender       = payable(msg.sender);
-      newBox.recipient    = _recipient;
-      newBox.passHashHash = _passHashHash;
-      newBox.sendToken    = _sendToken;
-      newBox.sendValue    = _sendValue;
-      newBox.requestToken = _requestToken;
-      newBox.requestValue = _requestValue;
-      newBox.timestamp    = block.timestamp;
-      newBox.taken        = false;
-      boxes.push(newBox);
-
-      // Save box index to mappings for sender & recipient
-      senderMap[msg.sender].push(boxes.length - 1);
-      recipientMap[_recipient].push(boxes.length - 1);
-
-      if(_sendToken == ERC20Interface(address(0)))
-          // Sending ETH
-          require(msg.value == _sendValue, "Insufficient ETH!");
-      else {
-          // Sending tokens
-          require(_sendToken.balanceOf(msg.sender) >= _sendValue, "Insufficient tokens!");
-          require(_sendToken.transferFrom(msg.sender, address(this), _sendValue), "Transferring tokens to ethbox smart contract failed!");
-      }
-  }
-
-  function createBoxWithPrivacy(bytes32 _recipientHash, ERC20Interface _sendToken, uint _sendValue, bytes32 _passHashHash) external payable
+    // Deposit funds into contract
+    function createBox(address _recipient, ERC20Interface _sendToken, uint _sendValue, ERC20Interface _requestToken, uint _requestValue, bytes32 _passHashHash) external payable
     {
         // Make sure deposits haven't been disabled (will be done when switching to new contract version)
         require(!stopDeposits, "Depositing to this ethbox contract has been disabled. You can still withdraw funds.");
+        
+        // Max 20 outgoing boxes per address, for now
+        require(senderMap[msg.sender].length < 20, "ethbox currently supports a maximum of 20 outgoing transactions per address.");
+    
+        Box memory newBox;
+        newBox.sender       = payable(msg.sender);
+        newBox.recipient    = _recipient;
+        newBox.passHashHash = _passHashHash;
+        newBox.sendToken    = _sendToken;
+        newBox.sendValue    = _sendValue;
+        newBox.requestToken = _requestToken;
+        newBox.requestValue = _requestValue;
+        newBox.timestamp    = block.timestamp;
+        newBox.taken        = false;
+        boxes.push(newBox);
+        
+        // Save box index to mappings for sender & recipient
+        senderMap[msg.sender].push(boxes.length - 1);
+        recipientMap[_recipient].push(boxes.length - 1);
+        
+        if(_sendToken == ERC20Interface(address(0)))
+            // Sending ETH
+            require(msg.value == _sendValue, "Insufficient ETH!");
+        else {
+            // Sending tokens
+            require(_sendToken.balanceOf(msg.sender) >= _sendValue, "Insufficient tokens!");
+            require(_sendToken.transferFrom(msg.sender, address(this), _sendValue), "Transferring tokens to ethbox smart contract failed!");
+        }
+    }
 
+	function createBoxWithPrivacy(bytes32 _recipientHash, ERC20Interface _sendToken, uint _sendValue, bytes32 _passHashHash) external payable
+    {
+        // Make sure deposits haven't been disabled (will be done when switching to new contract version)
+        require(!stopDeposits, "Depositing to this ethbox contract has been disabled. You can still withdraw funds.");
+        
         // Max 20 outgoing boxes per address, for now
         require(senderMapWithPrivacy[keccak256(abi.encodePacked(msg.sender))].length < 20, "ethbox currently supports a maximum of 20 outgoing transactions per address.");
-
+    
         BoxWithPrivacy memory newBox;
         newBox.senderHash       = keccak256(abi.encodePacked(msg.sender));
         newBox.recipientHash    = _recipientHash;
@@ -119,11 +119,11 @@ contract ethbox
         newBox.timestamp        = block.timestamp;
         newBox.taken            = false;
         boxesWithPrivacy.push(newBox);
-
+        
         // Save box index to mappings for sender & recipient
         senderMapWithPrivacy[newBox.senderHash].push(boxesWithPrivacy.length - 1);
         recipientMapWithPrivacy[newBox.recipientHash].push(boxesWithPrivacy.length - 1);
-
+        
         if(_sendToken == ERC20Interface(address(0)))
             // Sending ETH
             require(msg.value == _sendValue, "Insufficient ETH!");
